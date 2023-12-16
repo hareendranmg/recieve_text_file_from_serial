@@ -51,6 +51,11 @@ int main(int argc, char *argv[])
     int dataBits = atoi(argv[5]);
     int stopBits = atoi(argv[6]);
 
+    // Execute the Python script before opening the serial port
+    char python_command[256];
+    snprintf(python_command, sizeof(python_command), "python3 /home/root/serial_workaround.py %s %d %c %d %d", serialPortName, baudRate, parity, dataBits, stopBits);
+    system(python_command);
+
     // Open the serial port
     int serial_fd = open(serialPortName, O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (serial_fd == -1)
