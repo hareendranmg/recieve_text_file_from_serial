@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <termios.h>
+#include <time.h>
 
 #define BUFFER_SIZE 1024
 
@@ -129,6 +130,20 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+
+    if (access(outputFileName, F_OK) != -1)
+    {
+        // check for the file already exists, if yes, rename to filename_old_current_time
+        char oldFileName[256];
+        strcpy(oldFileName, outputFileName);
+        strcat(oldFileName, "_old_");
+        time_t now = time(NULL);
+        struct tm *t = localtime(&now);
+        char timeStr[256];
+        strftime(timeStr, sizeof(timeStr) - 1, "%Y%m%d_%H%M%S", t);
+        strcat(oldFileName, timeStr);
+        rename(outputFileName, oldFileName);
+    }
     // Open the output file
     FILE *outputFile = fopen(outputFileName, "wb");
     if (!outputFile)
@@ -153,6 +168,12 @@ int main(int argc, char *argv[])
         {
             fwrite(buffer, 1, bytesRead, outputFile);
             fflush(outputFile);
+        } else if (bytesRead < 0) {
+            perror("Error reading from serial port");
+            cleanup(serial_fd, outputFile);
+            return EXIT_FAILURE;
+        } else {
+            // No data read            
         }
     }
 
